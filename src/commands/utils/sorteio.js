@@ -131,16 +131,18 @@ module.exports = {
 		});
 
 		buttonCollector.on('end', async () => {
-			button.setDisabled(true);
-			msg.edit({
-				embeds: [embed],
-				components: [new ActionRowBuilder().addComponents(button)],
-			});
+			try {
+				button.setDisabled(true);
+				msg.edit({
+					embeds: [embed],
+					components: [new ActionRowBuilder().addComponents(button)],
+				});
 
-			if (inscritos.length === 0) return msg.reply('oi');
-			let ganhador = inscritos[Math.floor(Math.random() * inscritos.length)];
+				if (inscritos.length === 0) return msg.reply('oi');
+				let ganhador = inscritos[Math.floor(Math.random() * inscritos.length)];
 
-			await msg.reply(`o <@${ganhador}> ganhou!`);
+				await msg.reply(`o <@${ganhador}> ganhou!`);
+			} catch (err) {}
 		});
 	},
 };

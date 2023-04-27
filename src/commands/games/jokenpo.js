@@ -73,7 +73,9 @@ module.exports = {
 		});
 
 		buttonCollector.on('end', async () => {
-			await interaction.editReply({ components: [] });
+			try {
+				await interaction.editReply({ components: [] });
+			} catch (err) {}
 		});
 	},
 };
