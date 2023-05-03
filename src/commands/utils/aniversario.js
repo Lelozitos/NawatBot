@@ -61,6 +61,9 @@ module.exports = {
 						.setDescription('Aniversariante')
 						.setRequired(true)
 				)
+		)
+		.addSubcommand((subcommand) =>
+			subcommand.setName('proximo').setDescription('Ver o próximo aniversário')
 		),
 
 	async run(interaction, bot) {
@@ -75,6 +78,26 @@ module.exports = {
 				);
 			else
 				interaction.reply(`O aniversário do/a ${user} ainda não foi definido!`);
+
+			return;
+		} else if (interaction.options.getSubcommand() === 'proximo') {
+			let hoje = Date.now();
+			let datas = Object.entries(bot.bdays);
+			let ano = new Date().getFullYear();
+
+			datas.sort((a, b) => {
+				let distanciaA = Math.abs(hoje - new Date(ano - 1, a[1].mes, a[1].dia));
+				let distanciaB = Math.abs(hoje - new Date(ano - 1, b[1].mes, b[1].dia));
+				return distanciaB - distanciaA;
+			});
+
+			datas = datas.filter((d) => {
+				return new Date(ano, d[1].mes - 1, d[1].dia).valueOf() - hoje > 0;
+			});
+
+			interaction.reply(
+				`O proximo aniversário é dia \`${datas[0][1].dia}/${datas[0][1].mes}\`, do/a <@${datas[0][0]}>`
+			);
 
 			return;
 		}
