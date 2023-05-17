@@ -25,7 +25,9 @@ module.exports = {
 		});
 
 		bot.bdays = require('../aniversarios.json');
+		bot.meetings = require('../reunioes.json');
 		const birthdaysjs = require('../commands/utils/aniversario');
+		const meetingsjs = require('../commands/utils/reuniao');
 
 		Object.entries(bot.bdays).forEach((bday) =>
 			birthdaysjs.set(
@@ -36,6 +38,22 @@ module.exports = {
 				bday[1].guilds,
 				bot
 			)
+		);
+
+		Object.entries(bot.meetings).forEach((guild) =>
+			guild[1].forEach((meeting) => {
+				meetingsjs.set(
+					guild[0],
+					meeting.cargo,
+					meeting.descricao,
+					meeting.dia,
+					meeting.hora,
+					meeting.minuto,
+					meeting.canal,
+					meeting.repetir,
+					bot
+				);
+			})
 		);
 	},
 };

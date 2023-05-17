@@ -3,6 +3,7 @@ const {
 	EmbedBuilder,
 	PermissionFlagsBits,
 } = require('discord.js');
+const { writeFile } = require('fs');
 const { scheduleJob } = require('node-schedule');
 
 module.exports = {
@@ -16,6 +17,13 @@ module.exports = {
 			subcommand
 				.setName('definir')
 				.setDescription('Define uma reunião')
+				.addStringOption((option) =>
+					option
+						.setName('descricao')
+						.setDescription('Descrição da reunião')
+						.setMaxLength(2000)
+						.setRequired(true)
+				)
 				.addRoleOption((option) =>
 					option
 						.setName('cargo')
@@ -25,32 +33,58 @@ module.exports = {
 				.addIntegerOption((option) =>
 					option
 						.setName('dia')
-						.setDescription('Dia do aniversário')
-						.setMinValue(1)
-						.setMaxValue(31)
+						.setDescription('Dia da semana')
+						.setChoices(
+							{ name: 'Domingo | 1', value: 0 },
+							{ name: 'Segunda-Feira | 2', value: 1 },
+							{ name: 'Terça-Feira | 3', value: 2 },
+							{ name: 'Quarta-Feira | 4', value: 3 },
+							{ name: 'Quinta-Feira | 5', value: 4 },
+							{ name: 'Sexta-Feira | 6', value: 5 },
+							{ name: 'Sábado | 7', value: 6 }
+						)
 						.setRequired(true)
 				)
 				.addIntegerOption((option) =>
 					option
-						.setName('mes')
-						.setDescription('Mês do aniversário')
-						.setChoices(
-							{ name: 'Janeiro | 1', value: 1 },
-							{ name: 'Fevereiro | 2', value: 2 },
-							{ name: 'Março | 3', value: 3 },
-							{ name: 'Abril | 4', value: 4 },
-							{ name: 'Maio | 5', value: 5 },
-							{ name: 'Junho | 6', value: 6 },
-							{ name: 'Julho | 7', value: 7 },
-							{ name: 'Agosto | 8', value: 8 },
-							{ name: 'Setembro | 9', value: 9 },
-							{ name: 'Outubro | 10', value: 10 },
-							{ name: 'Novembro | 11', value: 11 },
-							{ name: 'Dezembro | 12', value: 12 }
-						)
+						.setName('hora')
+						.setDescription('Hora da reunião')
+						.setMinValue(0)
+						.setMaxValue(23)
 						.setRequired(true)
 				)
+				.addIntegerOption((option) =>
+					option
+						.setName('minuto')
+						.setDescription('Minuto da reunião')
+						.setMinValue(0)
+						.setMaxValue(59)
+						.setRequired(true)
+				)
+				.addChannelOption(
+					(option) =>
+						option
+							.setName('canal')
+							.setDescription('Canal para anunciar a reunião')
+							.setRequired(true)
+							.addChannelTypes(0) // canal de texto
+				)
+				.addBooleanOption((option) =>
+					option
+						.setName('repetir')
+						.setDescription('Repetir todas as semanas?')
+						.setRequired(false)
+				)
 		)
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('remover')
+				.setDescription('Remove uma reunião')
+				.addIntegerOption((option) =>
+					option.setName('reuniao').setDescription('Reunião a remover')
+				)
+		)
+
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('listar')
@@ -58,81 +92,95 @@ module.exports = {
 		),
 
 	async run(interaction, bot) {
-		const user = interaction.options.getUser('usuario');
-
-		if (interaction.options.getSubcommand() === 'ver') {
-			if (bot.bdays[user.id])
-				interaction.reply(
-					`O aniversário do ${user} é dia \`${bot.bdays[user.id].dia}/${
-						bot.bdays[user.id].mes
-					}\``
-				);
-			else
-				interaction.reply(`O aniversário do ${user} ainda não foi definido!`);
-
+		if (interaction.options.getSubcommand() === 'listar') {
+			console.log(interaction.member.roles.cache);
+			// lista com botoes para ver todas as reunioes
 			return;
 		}
 
-		let aniversario = {
+		if (interaction.options.getSubcommand() === 'remover') {
+			// lista com autocomplete para apagar uma reuniao
+			return;
+		}
+
+		let reuniao = {
+			descricao: interaction.options.getString('descricao'),
+			cargo: interaction.options.getRole('cargo').id,
 			dia: interaction.options.getInteger('dia'),
-			mes: interaction.options.getInteger('mes'),
-			ano: interaction.options.getInteger('ano') || null,
-			guilds: [interaction.guildId],
+			hora: interaction.options.getInteger('hora'),
+			minuto: interaction.options.getInteger('minuto'),
+			canal: interaction.options.getChannel('canal').id,
+			repetir: interaction.options.getBoolean('repetir') || false,
 		};
 
-		bot.bdays[user.id] = aniversario;
+		if (!bot.meetings[interaction.guild.id])
+			bot.meetings[interaction.guild.id] = [reuniao];
+		else {
+			for (i = 0; i < bot.meetings[interaction.guild.id].length; i++) {
+				let reu = bot.meetings[interaction.guild.id][i];
+
+				if (
+					reu.cargo === reuniao.cargo &&
+					reu.dia === reuniao.dia &&
+					reu.hora === reuniao.hora &&
+					reu.minuto === reuniao.minuto
+				)
+					return interaction.reply({
+						content: 'Essa reunião já existe!',
+						ephemeral: true,
+					});
+			}
+
+			bot.meetings[interaction.guild.id].push(reuniao);
+		}
 
 		writeFile(
-			'./aniversarios.json',
-			JSON.stringify(bot.bdays, null, 4),
+			'./reunioes.json',
+			JSON.stringify(bot.meetings, null, 4),
 			(err) => {
 				if (err) {
 					console.log(err);
-					interaction.reply(`Erro ao definir o aniversário!`);
+					interaction.reply(`Erro ao definir a reunião!`);
 					return;
 				}
-
-				interaction.reply(`Aniversário definido com sucesso!`);
-
-				this.set(
-					user.id,
-					aniversario.dia,
-					aniversario.mes,
-					aniversario.ano,
-					aniversario.guilds,
-					bot
-				);
 			}
 		);
+
+		this.set(
+			interaction.guild.id,
+			reuniao.cargo.id,
+			reuniao.descricao,
+			reuniao.dia,
+			reuniao.hora,
+			reuniao.minuto,
+			reuniao.canal,
+			reuniao.repetir,
+			bot
+		);
+
+		interaction.reply(`Reunião definida com sucesso!`);
 	},
 
-	async set(id, day, month, year, guilds, bot) {
-		let currentDate = new Date();
+	async set(guild, role, descricao, day, hour, minute, channel, repeat, bot) {
+		guild = await bot.guilds.fetch(guild);
+		role = await guild.roles.fetch(role);
 
-		let birthDate = new Date(currentDate.getFullYear(), month - 1, day, 00, 01);
-
-		const user = await bot.users.fetch(id);
-
-		scheduleJob(birthDate, () => {
+		scheduleJob(`${minute} ${hour} * * ${day}`, () => {
 			const embed = new EmbedBuilder()
-				.setAuthor({
-					name: user.username,
-					iconURL: user.displayAvatarURL({ dynamic: true }),
-				})
-				.setTitle(`🎉 Feliz Aniversário!`)
-				.setDescription(`${user} **• ${day}/${month}**`)
-				.setColor('#0099FF')
+				.setTitle(`🤝 Reunião`)
+				.setDescription(`**• **${descricao}\n\n${role}`)
+				.setColor('#696d98')
 				.setThumbnail(
-					'https://usagif.com/wp-content/uploads/gif/feliz-aniversario-gato-18.gif'
-				);
+					'https://timeqube.com/wp-content/uploads/2018/07/coffee.gif'
+				)
+				.setTimestamp();
 
-			guilds.forEach((guild) => {
-				let bdayChannel = bot.guilds.cache
-					.get(guild)
-					.channels.cache.find((channel) => channel.name === 'nawat');
+			// se nao encontrar o canal de texto
+			// ver se o cargo tem acesso ao canal de texto
 
-				bdayChannel.send({ embeds: [embed] });
-			});
+			guild.channels
+				.fetch(channel)
+				.then((channel) => channel.send({ embeds: [embed] }));
 		});
 	},
 };

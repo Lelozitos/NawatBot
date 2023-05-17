@@ -9,6 +9,7 @@ ERROS
 IMPROVEMENTS
 
     • Aniversário definir muda em todos os servers (fazer baseado em servers, não em usuários)
+    • Melhorar comando de Reunião, fazendo listar e remover (com autocomplete)
 
 COMANDOS
 
