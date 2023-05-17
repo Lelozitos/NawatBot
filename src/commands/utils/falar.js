@@ -19,6 +19,7 @@ module.exports = {
 					option
 						.setName('texto')
 						.setDescription('Mensagem para mandar')
+						.setMaxLength(2000)
 						.setRequired(true)
 				)
 		)
@@ -30,12 +31,14 @@ module.exports = {
 					option
 						.setName('titulo')
 						.setDescription('Título do embed')
+						.setMaxLength(256)
 						.setRequired(false)
 				)
 				.addStringOption((option) =>
 					option
 						.setName('descricao')
 						.setDescription('Descrição do embed')
+						.setMaxLength(2048)
 						.setRequired(false)
 				)
 				.addStringOption((option) =>
@@ -52,6 +55,7 @@ module.exports = {
 					option
 						.setName('imagem')
 						.setDescription('URL da thumbnail')
+						.setMaxLength(2048)
 						.setRequired(false)
 				)
 		),

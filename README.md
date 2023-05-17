@@ -14,5 +14,7 @@ IMPROVEMENTS
 COMANDOS
 
     • Comando Ajuda
-    • Comando de votação
+    • Comando de Votação
     • Black Jack 2 Jogadores
+    • Poker
+    • Clima
