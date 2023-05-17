@@ -14,6 +14,5 @@ IMPROVEMENTS
 COMANDOS
 
     • Comando Ajuda
-    • Próximo Aniversário
     • Comando de votação
     • Black Jack 2 Jogadores

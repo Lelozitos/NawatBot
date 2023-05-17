@@ -150,7 +150,7 @@ module.exports = {
 				})
 				.setTitle(`🎉 Feliz Aniversário!`)
 				.setDescription(`${user} **• ${day}/${month}**`)
-				.setColor('#0099FF')
+				.setColor('#FFF0E4')
 				.setThumbnail(
 					'https://usagif.com/wp-content/uploads/gif/feliz-aniversario-gato-18.gif'
 				);
